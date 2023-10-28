@@ -1,5 +1,8 @@
+import logging
 from dataclasses import dataclass
 from typing import Self
+
+logger = logging.getLogger("count_ops")
 
 
 def strip_comments(txt):
@@ -7,7 +10,7 @@ def strip_comments(txt):
     new_lines = []
     for line in lines:
         if "//" in line:
-            line = line[:line.index("//")]
+            line = line[: line.index("//")]
         new_lines.append(line)
     return "\n".join(new_lines)
 
@@ -42,6 +45,7 @@ class OpCount:
 @dataclass
 class OpCountNode:
     """A simplified tree with only the nodes with arithmetic operations, loops and branches."""
+
     name: str
     children: list[Self]
     op_count: OpCount
@@ -58,8 +62,10 @@ def count_from_tree(node: OpCountNode):
             # This means we will not have a single number.
             return node.op_count + max([count_from_tree(child) for child in node.children])
         else:
-            return node.op_count + sum([count_from_tree(child) for child in node.children],
-                                       start=OpCount()) * node.children_op_mult
+            return (
+                node.op_count
+                + sum([count_from_tree(child) for child in node.children], start=OpCount()) * node.children_op_mult
+            )
     else:
         return node.op_count
 
@@ -82,5 +88,5 @@ def range_to_count(loop_range):
     return int((end - start) / step)
 
 
-def print_indent(msg, level):
-    print("  " * level + msg)
+def log_indented(msg, level):
+    logger.warning("  " * level + msg)
