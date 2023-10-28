@@ -52,12 +52,16 @@ def make_opcount_tree(node, level=0) -> OpCountNode:
             oc = OpCount(mul=1)
         elif node.op == "+":
             oc = OpCount(add=1)
+        elif node.op == "==":
+            oc = OpCount()
         else:
             raise NotImplementedError(node.op)
-        return OpCountNode(name=node.op, op_count=oc, children=[make_opcount_tree(node.left, level=level + 1), make_opcount_tree(node.right, level=level + 1)])
+        return OpCountNode(name=node.op, op_count=oc, children=[make_opcount_tree(node.left, level=level + 1),
+                                                                make_opcount_tree(node.right, level=level + 1)])
     elif isinstance(node, pycparser.c_ast.UnaryOp):
         print_indent("unary op", level)
-        return OpCountNode(name=node.op, op_count=OpCount(add=1), children=[make_opcount_tree(node.expr, level=level + 1)])
+        return OpCountNode(name=node.op, op_count=OpCount(add=1),
+                           children=[make_opcount_tree(node.expr, level=level + 1)])
     elif isinstance(node, pycparser.c_ast.Assignment):
         if node.op == "=":
             print_indent("assignment", level)
@@ -80,13 +84,19 @@ def make_opcount_tree(node, level=0) -> OpCountNode:
         loop_range = get_loop_range(node)
         loop_steps = range_to_count(loop_range)
         # TODO: add ops from loop increment in self opcount
-        return OpCountNode(name="forloop", op_count=OpCount(), children_op_mult=loop_steps, children=[make_opcount_tree(node.stmt, level=level + 1)])
+        return OpCountNode(name="forloop", op_count=OpCount(), children_op_mult=loop_steps,
+                           children=[make_opcount_tree(node.stmt, level=level + 1)])
+    elif isinstance(node, pycparser.c_ast.If):
+        print_indent("If", level)
+        return OpCountNode(name="if", op_count=OpCount(), children=[make_opcount_tree(node.iftrue, level=level + 1),
+                                                                    make_opcount_tree(node.iffalse, level=level + 1)])
     elif isinstance(node, pycparser.c_ast.Decl):
         print_indent(f"recurse in {node.init.__class__.__name__}", level)
         return make_opcount_tree(node.init, level=level + 1)
     elif isinstance(node, pycparser.c_ast.Compound):
         print_indent("Compound", level)
-        return OpCountNode(name="Compound", op_count=OpCount(), children=[make_opcount_tree(each, level=level + 1) for each in node.block_items])
+        return OpCountNode(name="Compound", op_count=OpCount(),
+                           children=[make_opcount_tree(each, level=level + 1) for each in node.block_items])
     elif isinstance(node, pycparser.c_ast.FileAST):
         for each in node.children():
             print_indent(f"recurse in {each[1].__class__.__name__}", level)

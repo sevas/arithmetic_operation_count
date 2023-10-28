@@ -3,6 +3,7 @@ import pycparser
 from count_ops.c_lang import make_opcount_tree, OpCount, get_loop_range, range_to_count
 from count_ops.common import OpCountNode, count_from_tree
 
+
 def test_simple_expression():
     code = """
 int main(){
@@ -14,7 +15,6 @@ int main(){
     parsed = pycparser.CParser().parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert count_from_tree(oc_tree) == expected
-
 
 
 def test_count_loop_steps():
@@ -62,6 +62,25 @@ int main(){
 }
     """
     expected = OpCount(mul=200, add=200)
+    parsed = pycparser.CParser().parse(code)
+    oc_tree = make_opcount_tree(parsed)
+    assert count_from_tree(oc_tree) == expected
+
+
+def test_simple_ifelse():
+    code = """
+int main(){   
+    int res = 0;
+    if (res == 0){
+        res = res + 2;
+    }
+    else{
+        res = res + 3;
+    }
+    return 0;
+}
+    """
+    expected = OpCount(mul=0, add=2)
     parsed = pycparser.CParser().parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert count_from_tree(oc_tree) == expected
