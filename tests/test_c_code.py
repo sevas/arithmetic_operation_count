@@ -113,26 +113,25 @@ def test_image_processing_example():
         float ky[3*3]; // = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
     
         for (int i = 1; i < 239; i++) {                                     // 238 steps
-            for (int j = 1; j < 319; j++) {                                 // 318 steps
-                int idx = i * 320 + j;                                      //   1 add, 1 mul
+            for (int j = 1; j < 319; j++) {                                 //   318 steps
+                int idx = i * 320 + j;                                      //     1 add, 1 mul
                 float x_val = 0.f;
                 float y_val = 0.f;
-                for (int ki = 0; ki < 3; ki++) {                            //   3 steps
-                    for (int kj = 0; kj < 3; kj++) {                        //   3 steps
-                        int kidx = ki * 3 + kj;                             //     1 add, 1 mul
-                        int idx2 = (i + ki - 1) * 320 + (j + kj - 1);       //     5 add, 1 mul
-                        x_val += input_image[idx2] * kx[kidx];              //     1 add, 1 mul
-                        y_val += input_image[idx2] * ky[kidx];              //     1 add, 1 mul
+                for (int ki = 0; ki < 3; ki++) {                            //     3 steps
+                    for (int kj = 0; kj < 3; kj++) {                        //       3 steps
+                        int kidx = ki * 3 + kj;                             //         1 add, 1 mul
+                        int idx2 = (i + ki - 1) * 320 + (j + kj - 1);       //         5 add, 1 mul
+                        x_val += input_image[idx2] * kx[kidx];              //         1 add, 1 mul
+                        y_val += input_image[idx2] * ky[kidx];              //         1 add, 1 mul
                     }   
                 }
-                output_image[idx] = sqrt(x_val * x_val + y_val * y_val);    //   1 add, 2 mul
+                output_image[idx] = sqrt(x_val * x_val + y_val * y_val);    //     1 add, 2 mul
             }
         }
         return 0;
     }
     """
-    expected = OpCount(mul=238 * 318 * (1 + (9 * (1 + 1 + 1 + 1)) + 2),
-                       add=238 * 318 * (1 + (9 * (1 + 5 + 1 + 1)) + 1))
+    expected = OpCount(mul=238 * 318 * (1 + (9 * (1 + 1 + 1 + 1)) + 2), add=238 * 318 * (1 + (9 * (1 + 5 + 1 + 1)) + 1))
 
     code = strip_comments(code)
     parsed = pycparser.CParser().parse(code)
