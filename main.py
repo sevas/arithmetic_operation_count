@@ -1,6 +1,6 @@
 import pycparser
 
-from count_ops.c_lang import make_opcount_tree
+from count_ops.lang_c import make_opcount_tree
 from count_ops.common import print_tree, count_from_tree, strip_comments
 
 code = """
