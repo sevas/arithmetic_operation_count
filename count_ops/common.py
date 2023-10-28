@@ -38,6 +38,7 @@ class OpCount:
         else:
             raise NotImplementedError
 
+
 @dataclass
 class OpCountNode:
     """A simplified tree with only the nodes with arithmetic operations, loops and branches."""
@@ -58,13 +59,20 @@ def count_from_tree(node: OpCountNode):
             return node.op_count + max([count_from_tree(child) for child in node.children])
         else:
             return node.op_count + sum([count_from_tree(child) for child in node.children],
-                                        start=OpCount()) * node.children_op_mult
+                                       start=OpCount()) * node.children_op_mult
     else:
         return node.op_count
 
 
 def print_tree(node: OpCountNode, level=0):
-    print("  " * level + f"{node.name}: {node.op_count}")
+    msg = "  " * level + f"{node.name}"
+    if node.op_count.add > 0 or node.op_count.mul > 0:
+        msg += f"{node.op_count}"
+    if node.children_op_mult > 1:
+        msg += f" * {node.children_op_mult}"
+    if node.is_branch:
+        msg += " (branch)"
+    print(msg)
     for child in node.children:
         print_tree(child, level=level + 1)
 
