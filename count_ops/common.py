@@ -80,3 +80,7 @@ def print_tree(node: OpCountNode, level=0):
 def range_to_count(loop_range):
     start, end, step = loop_range
     return int((end - start) / step)
+
+
+def print_indent(msg, level):
+    print("  " * level + msg)

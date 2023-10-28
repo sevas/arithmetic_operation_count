@@ -3,11 +3,7 @@ from typing import Tuple
 
 import pycparser
 
-from .common import OpCount, range_to_count, OpCountNode
-
-
-def print_indent(msg, level):
-    print("  " * level + msg)
+from .common import OpCount, range_to_count, OpCountNode, print_indent
 
 
 def get_loop_range(for_node: pycparser.c_ast.For) -> Tuple[int, int, int]:
