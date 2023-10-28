@@ -86,7 +86,6 @@ int main(){
     assert count_from_tree(oc_tree) == expected
 
 
-def test_simple_ifelse():
 def test_count_ops_in_func_params():
     code = """
     int main(){
@@ -101,19 +100,41 @@ def test_count_ops_in_func_params():
     parsed = pycparser.CParser().parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert expected == count_from_tree(oc_tree)
+
+
+def test_image_processing_example():
     code = """
-int main(){   
-    int res = 0;
-    if (res == 0){
-        res = res + 2;
+    int main() {
+        float input_image[240*320];
+        float output_image[240*320];
+        
+        // comment out initialization to avoid unary ops to be counted. This should be a constant array
+        float kx[3*3]; // = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
+        float ky[3*3]; // = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+    
+        for (int i = 1; i < 239; i++) {                                     // 238 steps
+            for (int j = 1; j < 319; j++) {                                 // 318 steps
+                int idx = i * 320 + j;                                      //   1 add, 1 mul
+                float x_val = 0.f;
+                float y_val = 0.f;
+                for (int ki = 0; ki < 3; ki++) {                            //   3 steps
+                    for (int kj = 0; kj < 3; kj++) {                        //   3 steps
+                        int kidx = ki * 3 + kj;                             //     1 add, 1 mul
+                        int idx2 = (i + ki - 1) * 320 + (j + kj - 1);       //     5 add, 1 mul
+                        x_val += input_image[idx2] * kx[kidx];              //     1 add, 1 mul
+                        y_val += input_image[idx2] * ky[kidx];              //     1 add, 1 mul
+                    }   
+                }
+                output_image[idx] = sqrt(x_val * x_val + y_val * y_val);    //   1 add, 2 mul
+            }
+        }
+        return 0;
     }
-    else{
-        res = res + 3;
-    }
-    return 0;
-}
     """
-    expected = OpCount(mul=0, add=1)
+    expected = OpCount(mul=238 * 318 * (1 + (9 * (1 + 1 + 1 + 1)) + 2),
+                       add=238 * 318 * (1 + (9 * (1 + 5 + 1 + 1)) + 1))
+
+    code = strip_comments(code)
     parsed = pycparser.CParser().parse(code)
     oc_tree = make_opcount_tree(parsed)
-    assert count_from_tree(oc_tree) == expected
+    assert expected == count_from_tree(oc_tree)
