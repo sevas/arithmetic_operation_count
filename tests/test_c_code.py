@@ -80,7 +80,7 @@ int main(){
     return 0;
 }
     """
-    expected = OpCount(mul=0, add=2)
+    expected = OpCount(mul=0, add=1)
     parsed = pycparser.CParser().parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert count_from_tree(oc_tree) == expected

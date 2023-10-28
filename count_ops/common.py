@@ -22,19 +22,33 @@ class OpCount:
     def __rmul__(self, lhs):
         return self * lhs
 
+    def __lt__(self, other):
+        if isinstance(other, OpCount):
+            return (self.mul + self.add) < (other.mul + other.add)
+        else:
+            raise NotImplementedError
 
 @dataclass
 class OpCountNode:
+    """A simplified tree with only the nodes with arithmetic operations, loops and branches."""
     name: str
     children: list[Self]
     op_count: OpCount
     children_op_mult: int = 1
+    is_branch: bool = False
 
 
 def count_from_tree(node: OpCountNode):
     if node.children:
-        return node.op_count + sum([count_from_tree(child) for child in node.children],
-                                   start=OpCount()) * node.children_op_mult
+        if node.is_branch:
+            assert node.children_op_mult == 1
+            # When there are branches, we only count from the branch that yields the most ops.
+            # Later, this can be changed to count from all branches and publish a partial count tree.
+            # This means we will not have a single number.
+            return node.op_count + max([count_from_tree(child) for child in node.children])
+        else:
+            return node.op_count + sum([count_from_tree(child) for child in node.children],
+                                        start=OpCount()) * node.children_op_mult
     else:
         return node.op_count
 

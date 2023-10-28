@@ -10,8 +10,11 @@ int main(){
     if (res == 0){
         res = res + 2;
     }
+    else if (res == 1){
+        res = res + 3 + 2;
+    }
     else{
-        res = res + 3;
+        res = res + 4 + 2 +3;
     }
 
     return 0;
