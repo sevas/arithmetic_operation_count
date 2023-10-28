@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Self
 
 
 @dataclass
@@ -20,6 +21,28 @@ class OpCount:
 
     def __rmul__(self, lhs):
         return self * lhs
+
+
+@dataclass
+class OpCountNode:
+    name: str
+    children: list[Self]
+    op_count: OpCount
+    children_op_mult: int = 1
+
+
+def count_from_tree(node: OpCountNode):
+    if node.children:
+        return node.op_count + sum([count_from_tree(child) for child in node.children],
+                                   start=OpCount()) * node.children_op_mult
+    else:
+        return node.op_count
+
+
+def print_tree(node: OpCountNode, level=0):
+    print("  " * level + f"{node.name}: {node.op_count}")
+    for child in node.children:
+        print_tree(child, level=level + 1)
 
 
 def range_to_count(loop_range):

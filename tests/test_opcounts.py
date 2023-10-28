@@ -1,7 +1,6 @@
 import pytest
 
-from count_ops.common import range_to_count, OpCount
-
+from count_ops.common import range_to_count, OpCount, OpCountNode, count_from_tree
 
 
 @pytest.mark.parametrize("loop_range, expected_steps", [
@@ -36,3 +35,16 @@ class TestOpCountSpec:
     def test_rmul_with_scalar():
         oc1 = OpCount(mul=1, add=2)
         assert 2 * oc1 == OpCount(mul=2, add=4)
+
+
+class TestOpCountTreeSpec:
+    @staticmethod
+    def test_count_from_tree():
+        tree = OpCountNode("root", [
+            OpCountNode("child1", [], OpCount(mul=1, add=2)),
+            OpCountNode("child2", [
+                OpCountNode("child2_1", [], OpCount(mul=3, add=4)),
+                OpCountNode("child2_2", [], OpCount(mul=5, add=6)),
+            ], OpCount()),
+        ], OpCount(add=1))
+        assert count_from_tree(tree) == OpCount(mul=9, add=13)

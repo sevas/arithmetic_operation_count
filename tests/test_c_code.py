@@ -1,7 +1,7 @@
 import pytest
 import pycparser
-from count_ops.c_lang import count_ops, OpCount, get_loop_range, range_to_count
-
+from count_ops.c_lang import make_opcount_tree, OpCount, get_loop_range, range_to_count
+from count_ops.common import OpCountNode, count_from_tree
 
 def test_simple_expression():
     code = """
@@ -12,7 +12,9 @@ int main(){
 """
     expected = OpCount(mul=3, add=2)
     parsed = pycparser.CParser().parse(code)
-    assert count_ops(parsed) == expected
+    oc_tree = make_opcount_tree(parsed)
+    assert count_from_tree(oc_tree) == expected
+
 
 
 def test_count_loop_steps():
@@ -43,7 +45,8 @@ int main(){
     """
     expected = OpCount(mul=10, add=10)
     parsed = pycparser.CParser().parse(code)
-    assert count_ops(parsed) == expected
+    oc_tree = make_opcount_tree(parsed)
+    assert count_from_tree(oc_tree) == expected
 
 
 def test_nested_loops_with_constant():
@@ -60,4 +63,5 @@ int main(){
     """
     expected = OpCount(mul=200, add=200)
     parsed = pycparser.CParser().parse(code)
-    assert count_ops(parsed) == expected
+    oc_tree = make_opcount_tree(parsed)
+    assert count_from_tree(oc_tree) == expected
