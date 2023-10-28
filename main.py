@@ -1,24 +1,35 @@
 import pycparser
 
 from count_ops.c_lang import make_opcount_tree
-from count_ops.common import print_tree, count_from_tree
+from count_ops.common import print_tree, count_from_tree, strip_comments
 
 code = """
-int main(){
-
-    int res = 0;
-    if (res == 0){
-        res = res + 2;
+ int main() {
+        float input_image[240*320];
+        float output_image[240*320];
+        
+        float kx[3*3]; //= {-1, 0, 1, -2, 0, 2, -1, 0, 1};
+        float ky[3*3]; // = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
+    
+        for (int i = 1; i < 239; i++) {
+            for (int j = 1; j < 319; j++) {
+                int idx = i * 320 + j;
+                float x_val = 0.f;
+                float y_val = 0.f;
+                for (int ki = 0; ki < 3; ki++) {
+                    for (int kj = 0; kj < 3; kj++) {
+                        int kidx = ki * 3 + kj;
+                        int idx2 = (i + ki - 1) * 320 + (j + kj - 1);
+                        x_val += input_image[idx2] * kx[kidx];
+                        y_val += input_image[idx2] * ky[kidx];
+                    
+                    }   
+                }
+                output_image[idx] = sqrt(x_val * x_val + y_val * y_val);
+            }
+        }
+        return 0;
     }
-    else if (res == 1){
-        res = res + 3 + 2;
-    }
-    else{
-        res = res + 4 + 2 +3;
-    }
-
-    return 0;
-}
 """
 
 # code = """
@@ -31,7 +42,6 @@ int main(){
 
 def main():
     p = pycparser.CParser()
-    parsed = p.parse(code)
 
     parsed = p.parse(strip_comments(code))
 
