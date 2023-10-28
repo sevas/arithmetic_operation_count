@@ -1,7 +1,7 @@
 import pytest
 import pycparser
 from count_ops.c_lang import make_opcount_tree, OpCount, get_loop_range, range_to_count
-from count_ops.common import OpCountNode, count_from_tree
+from count_ops.common import OpCountNode, count_from_tree, strip_comments
 
 
 def test_simple_expression():

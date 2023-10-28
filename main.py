@@ -33,7 +33,9 @@ def main():
     p = pycparser.CParser()
     parsed = p.parse(code)
 
-    print(parsed)
+    parsed = p.parse(strip_comments(code))
+
+    # print(parsed)
     oc_tree = make_opcount_tree(parsed)
     print_tree(oc_tree)
     print(count_from_tree(oc_tree))

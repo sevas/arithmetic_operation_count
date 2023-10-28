@@ -2,6 +2,16 @@ from dataclasses import dataclass
 from typing import Self
 
 
+def strip_comments(txt):
+    lines = txt.split("\n")
+    new_lines = []
+    for line in lines:
+        if "//" in line:
+            line = line[:line.index("//")]
+        new_lines.append(line)
+    return "\n".join(new_lines)
+
+
 @dataclass
 class OpCount:
     mul: int = 0
