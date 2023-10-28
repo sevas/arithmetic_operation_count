@@ -62,6 +62,19 @@ def make_opcount_tree(node, level=0) -> OpCountNode:
 
         else:
             raise NotImplementedError(node.iter.func.id)
+    elif isinstance(node, ast.AugAssign):
+        if isinstance(node.op, (ast.Add, ast.Sub)):
+            oc = OpCount(add=1)
+        elif isinstance(node.op, ast.Mult):
+            oc = OpCount(mul=1)
+        elif isinstance(node.op, ast.Div):
+            raise NotImplementedError(node.op)
+        else:
+            raise NotImplementedError(node)
+
+        return OpCountNode(
+            name=f"AugAssign {node.op}", op_count=oc, children=[make_opcount_tree(node.value, level=level + 1)]
+        )
 
     else:
         log_indented(node.__class__.__name__, level)

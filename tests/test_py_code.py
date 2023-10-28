@@ -62,19 +62,24 @@ neighbour_idx = np.array([
 def sobel(image_in, image_out):
     for i in range(1, 239):                                         # 238 steps
         for j in range(1, 319):                                     #   318 steps
-            idx = i * 320 + j                                       #     1 mul, 1 add
+            idx = i * 320 + j                                       #     1 add, 1 mul
             x_val = 0.0
             y_val = 0.0
             for ki in range(3):                                     #     3 steps
                 for kj in range(3):                                 #       3 steps
                     kidx = ki * 3 + kj                              #         1 add, 1 mul
                     idx2 = (i + ki - 1) * 320 + (j + kj - 1)        #         5 add, 1 mul
-                    x_val += image_in[idx2] * k_x[kidx]             #         1 mul, 1 add
-                    y_val += image_in[idx2] * k_y[kidx]             #         1 mul, 1 add
-            image_out[idx] = m.sqrt(x_val * x_val + y_val * y_val)  #    2 mul, 1 add
+                    x_val += image_in[idx2] * k_x[kidx]             #         1 add, 1 mul
+                    y_val += image_in[idx2] * k_y[kidx]             #         1 add, 1 mul
+            image_out[idx] = m.sqrt(x_val * x_val + y_val * y_val)  #    2 add, 1 mul
     
     """
-    expected = OpCount(mul=238 * 318 * (1 + (9 * (1 + 1 + 1 + 1)) + 2), add=238 * 318 * (1 + (9 * (1 + 5 + 1 + 1)) + 1))
+    expected = OpCount(
+        # fmt: off
+        mul=238 * 318 * (1 + (3 * 3 * (1 + 1 + 1 + 1)) + 2),
+        add=238 * 318 * (1 + (3 * 3 * (1 + 5 + 1 + 1)) + 1)
+        # fmt: on
+    )
     parsed = ast.parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert count_from_tree(oc_tree) == expected
