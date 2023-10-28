@@ -131,7 +131,12 @@ def test_image_processing_example():
         return 0;
     }
     """
-    expected = OpCount(mul=238 * 318 * (1 + (9 * (1 + 1 + 1 + 1)) + 2), add=238 * 318 * (1 + (9 * (1 + 5 + 1 + 1)) + 1))
+    expected = OpCount(
+        # fmt: off
+        mul=238 * 318 * (1 + (3 * 3 * (1 + 1 + 1 + 1)) + 2),
+        add=238 * 318 * (1 + (3 * 3 * (1 + 5 + 1 + 1)) + 1)
+        # fmt: on
+    )
 
     code = strip_comments(code)
     parsed = pycparser.CParser().parse(code)
