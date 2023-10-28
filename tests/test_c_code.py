@@ -17,6 +17,25 @@ int main(){
     assert count_from_tree(oc_tree) == expected
 
 
+def test_simple_ifelse():
+    code = """
+int main(){   
+    int res = 0;
+    if (res == 0){
+        res = res + 2;
+    }
+    else{
+        res = res + 3;
+    }
+    return 0;
+}
+    """
+    expected = OpCount(mul=0, add=1)
+    parsed = pycparser.CParser().parse(code)
+    oc_tree = make_opcount_tree(parsed)
+    assert expected == count_from_tree(oc_tree)
+
+
 def test_count_loop_steps():
     code = """
 int main(){
@@ -68,6 +87,20 @@ int main(){
 
 
 def test_simple_ifelse():
+def test_count_ops_in_func_params():
+    code = """
+    int main(){
+        int x = 2;
+        int y = 4;
+        
+        float res = sqrt(x*x + y*y);
+        return 0;
+    }
+    """
+    expected = OpCount(mul=2, add=1)
+    parsed = pycparser.CParser().parse(code)
+    oc_tree = make_opcount_tree(parsed)
+    assert expected == count_from_tree(oc_tree)
     code = """
 int main(){   
     int res = 0;
