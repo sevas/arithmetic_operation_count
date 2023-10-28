@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         conda install mamba -c conda-forge
-        mamba install --file requirements.txt --name base
+        mamba install --file requirements.txt --name base -c conda-forge
     - name: Lint with flake8
       run: |
         mamba install flake8
