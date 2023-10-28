@@ -89,4 +89,4 @@ def range_to_count(loop_range):
 
 
 def log_indented(msg, level):
-    logger.warning("  " * level + msg)
+    logger.info("  " * level + msg)
