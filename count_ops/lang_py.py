@@ -1,5 +1,5 @@
 import ast
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 from .common import OpCountNode, OpCount, log_indented, range_to_count
 
@@ -12,25 +12,35 @@ def get_func_named(mod: ast.Module, name: str):
     raise KeyError(name)
 
 
-def get_loop_range(range_args: List[ast.Constant]) -> Tuple[int, int, int]:
+def get_loop_range(range_args: List[Union[ast.Constant, ast.Name]], context=None) -> Tuple[int, int, int]:
+    def get_value(arg):
+        if isinstance(arg, ast.Constant):
+            return arg.value
+        elif isinstance(arg, ast.Name):
+            if context is None:
+                raise ValueError("context is None")
+            return context[arg.id]
+        else:
+            raise NotImplementedError(arg.__class__.__name__)
+
     if len(range_args) == 1:
         start = 0
-        end = range_args[0].value
+        end = get_value(range_args[0])
         step = 1
     elif len(range_args) == 2:
-        start = range_args[0].value
-        end = range_args[1].value
+        start = get_value(range_args[0])
+        end = get_value(range_args[1])
         step = 1
     elif len(range_args) == 3:
-        start = range_args[0].value
-        end = range_args[1].value
-        step = range_args[2].value
+        start = get_value(range_args[0])
+        end = get_value(range_args[1])
+        step = get_value(range_args[2])
     else:
         raise NotImplementedError("range with more than 3 arguments")
     return start, end, step
 
 
-def make_opcount_tree(node, level=0) -> OpCountNode:
+def make_opcount_tree(node, context=None, level=0) -> OpCountNode:
     if isinstance(node, ast.BinOp):
         log_indented(f"binary op {node.op.__class__.__name__}", level)
         if isinstance(node.op, ast.Mult):
@@ -45,18 +55,21 @@ def make_opcount_tree(node, level=0) -> OpCountNode:
         return OpCountNode(
             name=node.op.__class__.__name__,
             op_count=oc,
-            children=[make_opcount_tree(node.left, level=level + 1), make_opcount_tree(node.right, level=level + 1)],
+            children=[
+                make_opcount_tree(node.left, context=context, level=level + 1),
+                make_opcount_tree(node.right, context=context, level=level + 1),
+            ],
         )
     elif isinstance(node, ast.For):
         log_indented("For", level)
 
         if node.iter.func.id == "range":
-            loop_range = get_loop_range(node.iter.args)
+            loop_range = get_loop_range(node.iter.args, context=context)
 
             return OpCountNode(
                 name="For",
                 op_count=OpCount(),
-                children=[make_opcount_tree(child, level=level + 1) for child in node.body],
+                children=[make_opcount_tree(child, context=context, level=level + 1) for child in node.body],
                 children_op_mult=range_to_count(loop_range),
             )
 
@@ -73,7 +86,9 @@ def make_opcount_tree(node, level=0) -> OpCountNode:
             raise NotImplementedError(node)
 
         return OpCountNode(
-            name=f"AugAssign {node.op}", op_count=oc, children=[make_opcount_tree(node.value, level=level + 1)]
+            name=f"AugAssign {node.op}",
+            op_count=oc,
+            children=[make_opcount_tree(node.value, context=context, level=level + 1)],
         )
 
     else:
@@ -82,5 +97,7 @@ def make_opcount_tree(node, level=0) -> OpCountNode:
         return OpCountNode(
             name=node.__class__.__name__,
             op_count=OpCount(),
-            children=[make_opcount_tree(child, level=level + 1) for child in ast.iter_child_nodes(node)],
+            children=[
+                make_opcount_tree(child, context=context, level=level + 1) for child in ast.iter_child_nodes(node)
+            ],
         )

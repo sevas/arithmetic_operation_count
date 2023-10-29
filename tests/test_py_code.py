@@ -27,6 +27,18 @@ def func(arr):
     assert count_from_tree(oc_tree) == expected
 
 
+def test_simple_loop_with_variable():
+    code = """
+def func(arr):
+    for i in range(n):
+        arr[i] = i * 2 + 3
+    """
+    expected = OpCount(add=5, mul=5)
+    parsed = ast.parse(code)
+    oc_tree = make_opcount_tree(parsed, context={"n": 5})
+    assert count_from_tree(oc_tree) == expected
+
+
 def test_nested_loop():
     code = """
 def nested_loop_with_constant(arr):
