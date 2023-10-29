@@ -26,3 +26,4 @@ include = [
     "count_ops/*",
     "tests/*"
 ]
+omit = ["sample_dumps/*"]
