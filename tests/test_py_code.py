@@ -31,6 +31,27 @@ def func():
     assert expected == count_from_tree(oc_tree)
 
 
+def test_ifelifelse():
+    code = """
+def func():  
+    res = 0
+    if res == 0:
+        res = res + 2
+    elif res == 1:
+        res = res + 3 * 3
+    elif res == 2:
+        res = res + 3 * 3 * 5 + 12
+    else:
+        res = res + res + res *2 
+    
+    return res
+    """
+    expected = OpCount(mul=2, add=2)
+    parsed = ast.parse(code)
+    oc_tree = make_opcount_tree(parsed)
+    assert expected == count_from_tree(oc_tree)
+
+
 def test_simple_loop():
     code = """
 def func(arr):
