@@ -7,7 +7,7 @@ from count_ops.parse import parse
 from count_ops.lang_py import make_opcount_tree, get_func_named
 
 SRC_FILE = Path(__file__).parent.parent / "main_numba.py"
-FUNC_NAME = "simple_branch"
+FUNC_NAME = "sobel"
 
 
 class ColorPalette:
@@ -19,60 +19,68 @@ class ColorPalette:
     purple = "#b16286"
     aqua = "#689d6a"
     white = "#eeeeee"
+    grey = "#303030"
 
 
 def add_tree_to_scene(op_tree, gv: pg.GraphicsView):
-    # gv.clear()
-    # gv.setAspectLocked(True)
-    # gv.setRange(QtCore.QRectF(0, 0, 100, 100))
-    # gv.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
+    all_items = []
 
-    scene = gv.scene()
-
-    def add_node_to_scene(node: OpCountNode, pos, parent=None):
-        if parent is None:
-            parent = scene
-
-        color_fill = pg.mkColor(ColorPalette.blue)
+    def add_node_to_scene(node: OpCountNode, pos):
+        color_fill = pg.mkColor(ColorPalette.grey)
         color_border = pg.mkColor(ColorPalette.white)
-        if node.is_branch:
-            color_fill = pg.mkColor(ColorPalette.red)
-        elif node.children_op_mult > 1:
-            color_fill = pg.mkColor(ColorPalette.green)
-        elif node.op_count.add > 0 or node.op_count.mul > 0:
-            color_fill = pg.mkColor(ColorPalette.yellow)
-
-        msg = f"{node.name}"[:10]
-        # box_width = 20 * len(msg)
+        tooltip = f"""<b>Node: </b>{node.name}"""
         box_width = 50
-        node_item = QtWidgets.QGraphicsRectItem(pos[0], pos[1], box_width, 50)
-        node_item.setToolTip(msg)
-        node_item.setBrush(QtGui.QBrush(color_fill))
-        node_item.setPen(QtGui.QPen(color_border, 3))
 
-        txt = QtWidgets.QGraphicsTextItem(msg)
-        txt.setPos(pos[0] + 10, pos[1] + 10)
+        if node.is_branch:
+            color_fill = pg.mkColor(ColorPalette.blue)
+            box_width += 10
+        elif node.children_op_mult > 1:
+            box_width += 10
+            color_fill = pg.mkColor(ColorPalette.green)
+            tooltip = f"""<b>Node: </b>{node.name}<br><b>Op multiplier:</b> {node.children_op_mult}"""
+        elif node.op_count.add > 0 or node.op_count.mul > 0:
+            box_width += 10
+            color_fill = pg.mkColor(ColorPalette.yellow)
+            tooltip = f"""<b>Node: </b>{node.name}<br><b>#muls: </b>: {node.op_count.mul}<br><b>#adds:</b>{node.op_count.add}"""
+
+        label = f"{node.name}"[:10]
+        # box_width = 20 * len(msg)
+        node_item = QtWidgets.QGraphicsRectItem(pos[0], pos[1], box_width, 50)
+        node_item.setToolTip(tooltip)
+        node_item.setBrush(QtGui.QBrush(color_fill))
+        node_item.setPen(QtGui.QPen(color_border, 1))
+        node_item.z = 10
+        txt = QtWidgets.QGraphicsTextItem(label)
+        txt.setPos(pos[0] + 10, pos[1] + 5)
         txt.z = 10
 
-        parent.addItem(node_item)
-        parent.addItem(txt)
+        gv.addItem(node_item)
+        gv.addItem(txt)
+        all_items.append(txt)
+        all_items.append(node_item)
 
         if node.children:
+            children_count = len(node.children)
             for i, child in enumerate(node.children):
-                child_item = add_node_to_scene(child, pos=(pos[0] + box_width + 50, pos[1] + (i * 100)), parent=parent)
+                child_item = add_node_to_scene(child, pos=(pos[0] + box_width + 50, pos[1] + (i * 100)))
 
-                line = QtWidgets.QGraphicsLineItem(
-                    node_item.boundingRect().center().x(),
-                    node_item.boundingRect().center().y(),
-                    child_item.boundingRect().center().x(),
-                    child_item.boundingRect().center().y(),
-                )
+                x0 = node_item.boundingRect().center().x()
+                y0 = node_item.boundingRect().center().y()
+                x1 = child_item.boundingRect().center().x()
+                y1 = child_item.boundingRect().center().y()
+                path = QtGui.QPainterPath()
+                path.moveTo(x0, y0)
+                path.lineTo(x0, y1)
+                path.lineTo(x1, y1)
+                line = QtWidgets.QGraphicsPathItem(path)
                 line.setPen(pg.mkPen(color_border, width=3))
-                scene.addItem(line)
+                gv.addItem(line)
+                all_items.append(line)
 
         return node_item
 
     add_node_to_scene(op_tree, (0, 0))
+    print(len(all_items))
 
 
 def main():
@@ -85,6 +93,7 @@ def main():
     # pg.setConfigOptions(antialias=True)
     app = pg.mkQApp()
     win = pg.GraphicsView()
+    win.enableMouse()
     win.resize(1000, 600)
     win.setWindowTitle("Func operation count tree")
     win.show()
@@ -93,5 +102,25 @@ def main():
     app.exec()
 
 
+def graphicscene_sandbox():
+    app = pg.mkQApp()
+    win = pg.GraphicsView()
+    win.enableMouse()
+    box = QtWidgets.QGraphicsRectItem(0, 0, 100, 100)
+    box.setBrush(QtGui.QBrush(pg.mkColor(ColorPalette.blue)))
+    box.setToolTip("box")
+
+    box2 = QtWidgets.QGraphicsRectItem(150, 150, 100, 100)
+    box2.setBrush(QtGui.QBrush(pg.mkColor(ColorPalette.blue)))
+
+    box2.setToolTip("box2")
+    win.addItem(box)
+    win.addItem(box2)
+    win.show()
+
+    app.exec()
+
+
 if __name__ == "__main__":
     main()
+    # graphicscene_sandbox()
