@@ -75,6 +75,16 @@ def make_opcount_tree(node, context=None, level=0) -> OpCountNode:
 
         else:
             raise NotImplementedError(node.iter.func.id)
+    elif isinstance(node, ast.If):
+        log_indented("If", level)
+
+        return OpCountNode(
+            name="If",
+            op_count=OpCount(),
+            children=[make_opcount_tree(child, context=context, level=level + 1) for child in node.body + node.orelse],
+            is_branch=True,
+        )
+
     elif isinstance(node, ast.AugAssign):
         if isinstance(node.op, (ast.Add, ast.Sub)):
             oc = OpCount(add=1)

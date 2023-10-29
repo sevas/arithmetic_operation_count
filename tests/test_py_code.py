@@ -15,6 +15,22 @@ def func():
     assert count_from_tree(oc_tree) == expected
 
 
+def test_simple_ifelse():
+    code = """
+def func():  
+    res = 0
+    if res == 0:
+        res = res + 2
+    else:
+        res = res + 3 * 3
+    return res
+    """
+    expected = OpCount(mul=1, add=1)
+    parsed = ast.parse(code)
+    oc_tree = make_opcount_tree(parsed)
+    assert expected == count_from_tree(oc_tree)
+
+
 def test_simple_loop():
     code = """
 def func(arr):
