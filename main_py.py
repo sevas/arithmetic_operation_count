@@ -4,6 +4,7 @@ from pathlib import Path
 
 from count_ops.common import count_from_tree
 from count_ops.lang_py import make_opcount_tree, get_func_named
+from count_ops.parse import parse
 
 SRC_FILE = Path(__file__).parent / "main_numba.py"
 
@@ -24,9 +25,9 @@ def main():
     logger = logging.getLogger("count_ops")
     logger.setLevel(logging.INFO)
 
-    parsed = ast.parse(SRC_FILE.read_text())
+    parsed = parse(SRC_FILE.read_text())
     print(list(func_names(parsed)))
-    f = get_func_named(parsed, "loop_with_constant")
+    f = get_func_named(parsed, "sobel")
     # print_tree(f)
 
     op_tree = make_opcount_tree(f)

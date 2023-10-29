@@ -1,7 +1,6 @@
-import pytest
-import pycparser
 from count_ops.lang_c import make_opcount_tree, OpCount, get_loop_range, range_to_count
-from count_ops.common import OpCountNode, count_from_tree, strip_comments
+from count_ops.common import OpCountNode, count_from_tree
+from count_ops.parse import parse
 
 
 def test_simple_expression():
@@ -12,7 +11,7 @@ int main(){
 }
 """
     expected = OpCount(mul=3, add=2)
-    parsed = pycparser.CParser().parse(code)
+    parsed = parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert count_from_tree(oc_tree) == expected
 
@@ -31,7 +30,7 @@ int main(){
 }
     """
     expected = OpCount(mul=0, add=1)
-    parsed = pycparser.CParser().parse(code)
+    parsed = parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert expected == count_from_tree(oc_tree)
 
@@ -46,7 +45,7 @@ int main(){
     return 0;
 }
 """
-    parsed = pycparser.CParser().parse(code)
+    parsed = parse(code)
     for_node = parsed.ext[0].body.block_items[1]
     loop_range = get_loop_range(for_node)
     assert loop_range == (0, 10, 1)
@@ -63,7 +62,7 @@ int main(){
 }
     """
     expected = OpCount(mul=10, add=10)
-    parsed = pycparser.CParser().parse(code)
+    parsed = parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert count_from_tree(oc_tree) == expected
 
@@ -81,7 +80,7 @@ int main(){
 }
     """
     expected = OpCount(mul=200, add=200)
-    parsed = pycparser.CParser().parse(code)
+    parsed = parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert count_from_tree(oc_tree) == expected
 
@@ -97,7 +96,7 @@ def test_count_ops_in_func_params():
     }
     """
     expected = OpCount(mul=2, add=1)
-    parsed = pycparser.CParser().parse(code)
+    parsed = parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert expected == count_from_tree(oc_tree)
 
@@ -137,8 +136,6 @@ def test_image_processing_example():
         add=238 * 318 * (1 + (3 * 3 * (1 + 5 + 1 + 1)) + 1)
         # fmt: on
     )
-
-    code = strip_comments(code)
-    parsed = pycparser.CParser().parse(code)
+    parsed = parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert expected == count_from_tree(oc_tree)

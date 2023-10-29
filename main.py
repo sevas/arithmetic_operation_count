@@ -1,7 +1,8 @@
 import pycparser
 
 from count_ops.lang_c import make_opcount_tree
-from count_ops.common import print_tree, count_from_tree, strip_comments
+from count_ops.common import print_tree, count_from_tree
+from count_ops.parse import parse
 
 code = """
  int main() {
@@ -41,9 +42,7 @@ code = """
 
 
 def main():
-    p = pycparser.CParser()
-
-    parsed = p.parse(strip_comments(code))
+    parsed = parse(code)
 
     # print(parsed)
     oc_tree = make_opcount_tree(parsed)
@@ -51,5 +50,5 @@ def main():
     print(count_from_tree(oc_tree))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
