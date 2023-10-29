@@ -1,6 +1,7 @@
 import numpy as np
 from numba import njit
 import math as m
+
 # from count_ops.numba_lang import count_ops
 
 
@@ -9,10 +10,20 @@ def simple_expression(a, b, c):
     a = a + b + 2 * (c * 3)
     return a
 
+
 @njit
 def loop_with_constant(arr):
     for i in range(10):
         arr[i] = i * 2 + 3
+
+
+def simple_branch(x, order):
+    if order == 2:
+        return x * x + 2 * x
+    elif order == 3:
+        return 3 * x * x * x + 2 * x * x + 1
+    else:
+        return 2 * x
 
 
 @njit
@@ -22,30 +33,27 @@ def nested_loop_with_constant(arr):
             arr[i, j] = i * 20 + j
 
 
-k_x = np.array([
-    [-1, 0, 1],
-    [-2, 0, 2],
-    [-1, 0, 1]])
+k_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
 
 
-k_y = np.array([
-    [-1, -2, -1],
-    [ 0, 0, 0],
-    [ 1, 2, 1]])
+k_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
 
-neighbour_idx = np.array([
-    [(-1, -1), (-1, 0), (-1, 1)],
-    [( 0, -1), ( 0, 0), ( 0, 1)],
-    [( 1, -1), ( 1, 0), ( 1, 1)],
-])
+neighbour_idx = np.array(
+    [
+        [(-1, -1), (-1, 0), (-1, 1)],
+        [(0, -1), (0, 0), (0, 1)],
+        [(1, -1), (1, 0), (1, 1)],
+    ]
+)
+
 
 @njit
 def sobel(image_in, image_out):
     for i in range(1, 239):
         for j in range(1, 319):
             idx = i * 320 + j
-            x_val = 0.
-            y_val = 0.
+            x_val = 0.0
+            y_val = 0.0
             for ki in range(3):
                 for kj in range(3):
                     kidx = ki * 3 + kj
@@ -66,5 +74,6 @@ def main():
     # nested_loop_with_constant(arr2d)
     # print(arr2d)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
