@@ -1,5 +1,3 @@
-import ast
-
 import pytest
 
 from count_ops.lang_py import make_opcount_tree, get_func_named
@@ -16,7 +14,7 @@ def func():
     return a
         """
         expected = OpCount(mul=3, add=2)
-        parsed = ast.parse(code)
+        parsed = parse(code)
         oc_tree = make_opcount_tree(parsed)
         assert count_from_tree(oc_tree) == expected
 
@@ -69,7 +67,7 @@ def func():
     return res
     """
     expected = OpCount(mul=1, add=1)
-    parsed = ast.parse(code)
+    parsed = parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert expected == count_from_tree(oc_tree)
 
@@ -90,7 +88,7 @@ def func():
     return res
     """
     expected = OpCount(mul=2, add=2)
-    parsed = ast.parse(code)
+    parsed = parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert expected == count_from_tree(oc_tree)
 
@@ -104,7 +102,7 @@ def func(arr):
         arr[i] = i * 2 + 3
         """
         expected = OpCount(add=10, mul=10)
-        parsed = ast.parse(code)
+        parsed = parse(code)
         oc_tree = make_opcount_tree(parsed)
         assert count_from_tree(oc_tree) == expected
 
@@ -116,7 +114,7 @@ def func(arr):
         arr[i] = i * 2 + 3
         """
         expected = OpCount(add=5, mul=5)
-        parsed = ast.parse(code)
+        parsed = parse(code)
         oc_tree = make_opcount_tree(parsed, context={"n": 5})
         assert count_from_tree(oc_tree) == expected
 
@@ -142,7 +140,7 @@ def test_nested_loop_with_constant(arr):
             arr[i, j] = i * 20 + j
     """
         expected = OpCount(add=200, mul=200)
-        parsed = ast.parse(code)
+        parsed = parse(code)
         oc_tree = make_opcount_tree(parsed)
         assert count_from_tree(oc_tree) == expected
 
@@ -234,6 +232,6 @@ def sobel(image_in, image_out):
         add=238 * 318 * (1 + (3 * 3 * (1 + 5 + 1 + 1)) + 1)
         # fmt: on
     )
-    parsed = ast.parse(code)
+    parsed = parse(code)
     oc_tree = make_opcount_tree(parsed)
     assert count_from_tree(oc_tree) == expected
