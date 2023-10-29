@@ -1,18 +1,61 @@
 import ast
-from count_ops.lang_py import make_opcount_tree
+
+import pytest
+
+from count_ops.lang_py import make_opcount_tree, get_func_named
 from count_ops.common import OpCount, count_from_tree
+from count_ops.parse import parse
 
 
-def test_simple_expression():
-    code = """
+class TestExpressionsAndAssignmentsSpec:
+    @staticmethod
+    def test_simple_expression():
+        code = """
 def func():
     a = 12 * 2 + 3 + 2 * (2 * 5)
     return a
-"""
-    expected = OpCount(mul=3, add=2)
-    parsed = ast.parse(code)
-    oc_tree = make_opcount_tree(parsed)
-    assert count_from_tree(oc_tree) == expected
+        """
+        expected = OpCount(mul=3, add=2)
+        parsed = ast.parse(code)
+        oc_tree = make_opcount_tree(parsed)
+        assert count_from_tree(oc_tree) == expected
+
+    @staticmethod
+    def test_division_binop_not_implemented():
+        code = """
+def func():
+    a = 12 / 2
+    return a
+        """
+        with pytest.raises(NotImplementedError):
+            parsed = parse(code)
+            make_opcount_tree(parsed)
+
+    @staticmethod
+    def test_augmented_assignment():
+        code = """
+def func():
+    a = 12
+    a += 2
+    a -= 34
+    a *= 5
+    return a
+    """
+        expected = OpCount(add=2, mul=1)
+        parsed = parse(code)
+        oc_tree = make_opcount_tree(parsed)
+        assert expected == count_from_tree(oc_tree)
+
+    def test_division_assignment_is_not_implemented(self):
+        code = """
+def func():
+    a = 0
+    a /= 2
+    return a
+        """
+        with pytest.raises(NotImplementedError):
+            parsed = parse(code)
+            make_opcount_tree(parsed)
 
 
 def test_simple_ifelse():
@@ -52,41 +95,103 @@ def func():
     assert expected == count_from_tree(oc_tree)
 
 
-def test_simple_loop():
-    code = """
+class TestForLoopsSpec:
+    @staticmethod
+    def test_simple_loop():
+        code = """
 def func(arr):
     for i in range(10):
         arr[i] = i * 2 + 3
-"""
-    expected = OpCount(add=10, mul=10)
-    parsed = ast.parse(code)
-    oc_tree = make_opcount_tree(parsed)
-    assert count_from_tree(oc_tree) == expected
+        """
+        expected = OpCount(add=10, mul=10)
+        parsed = ast.parse(code)
+        oc_tree = make_opcount_tree(parsed)
+        assert count_from_tree(oc_tree) == expected
 
-
-def test_simple_loop_with_variable():
-    code = """
+    @staticmethod
+    def test_simple_loop_with_variable():
+        code = """
 def func(arr):
     for i in range(n):
         arr[i] = i * 2 + 3
-    """
-    expected = OpCount(add=5, mul=5)
-    parsed = ast.parse(code)
-    oc_tree = make_opcount_tree(parsed, context={"n": 5})
-    assert count_from_tree(oc_tree) == expected
+        """
+        expected = OpCount(add=5, mul=5)
+        parsed = ast.parse(code)
+        oc_tree = make_opcount_tree(parsed, context={"n": 5})
+        assert count_from_tree(oc_tree) == expected
 
+    @staticmethod
+    def test_raise_exception_when_context_is_not_defined():
+        code = """
+def func():
+    a = 0
+    for i in range(n):
+        a += i
+    return a
+        """
+        with pytest.raises(ValueError):
+            parsed = parse(code)
+            make_opcount_tree(parsed)
 
-def test_nested_loop():
-    code = """
-def nested_loop_with_constant(arr):
+    @staticmethod
+    def test_nested_loop():
+        code = """
+def test_nested_loop_with_constant(arr):
     for i in range(10):
         for j in range(20):
             arr[i, j] = i * 20 + j
-"""
-    expected = OpCount(add=200, mul=200)
-    parsed = ast.parse(code)
-    oc_tree = make_opcount_tree(parsed)
-    assert count_from_tree(oc_tree) == expected
+    """
+        expected = OpCount(add=200, mul=200)
+        parsed = ast.parse(code)
+        oc_tree = make_opcount_tree(parsed)
+        assert count_from_tree(oc_tree) == expected
+
+    @staticmethod
+    def test_range_with_3_args():
+        code = """
+def func():
+    a = 0
+    for i in range(1, 10, 2):
+        a += i
+    return a
+        """
+        expected = OpCount(add=4, mul=0)
+        parsed = parse(code)
+        oc_tree = make_opcount_tree(parsed)
+        assert expected == count_from_tree(oc_tree)
+
+    @staticmethod
+    def test_for_with_other_generator_raises_exception():
+        code = """
+def func(arr):
+    for i in loop(10):
+        arr[i] = i * 2 + 3
+        """
+        parsed = parse(code)
+        with pytest.raises(NotImplementedError):
+            make_opcount_tree(parsed)
+
+
+class Test_get_func_named_Spec:
+    @staticmethod
+    def test_can_get_function_by_name():
+        code = """
+def foo(): pass
+def bar(): pass
+        """
+        parsed = parse(code)
+        bar_func = get_func_named(parsed, name="bar")
+        assert bar_func.name == "bar"
+
+    @staticmethod
+    def test_raises_keyerror_when_function_does_not_exist():
+        code = """
+def foo(): pass
+def bar(): pass
+        """
+        parsed = parse(code)
+        with pytest.raises(KeyError):
+            get_func_named(parsed, name="baz")
 
 
 def test_sobel_filter():
