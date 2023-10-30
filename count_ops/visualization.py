@@ -58,11 +58,13 @@ def add_tree_to_scene(op_tree, gv: pg.GraphicsView):
         gv.addItem(txt)
         all_items.append(txt)
         all_items.append(node_item)
-
+        children_count = 0
+        total_row_count = 0
         if node.children:
-            children_count = len(node.children)
             for i, child in enumerate(node.children):
-                child_item = add_node_to_scene(child, pos=(pos[0] + box_width + 50, pos[1] + (i * 100)))
+                child_item, nrows = add_node_to_scene(
+                    child, pos=(pos[0] + box_width + 50, pos[1] + (total_row_count * 50))
+                )
 
                 x0 = node_item.boundingRect().center().x()
                 y0 = node_item.boundingRect().center().y()
@@ -76,8 +78,9 @@ def add_tree_to_scene(op_tree, gv: pg.GraphicsView):
                 line.setPen(pg.mkPen(color_border, width=3))
                 gv.addItem(line)
                 all_items.append(line)
+                total_row_count += nrows
 
-        return node_item
+        return node_item, total_row_count + 1
 
     add_node_to_scene(op_tree, (0, 0))
     print(len(all_items))
