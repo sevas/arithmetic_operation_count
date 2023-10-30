@@ -10,24 +10,13 @@ class TestExpressionsAndAssignmentsSpec:
     def test_simple_expression():
         code = """
 def func():
-    a = 12 * 2 + 3 + 2 * (2 * 5)
+    a = 12 * 2 + 3 + 2 * (2 * 5) / 30
     return a
         """
-        expected = OpCount(mul=3, add=2)
+        expected = OpCount(mul=3, add=2, div=1)
         parsed = parse(code)
         oc_tree = make_opcount_tree(parsed)
         assert count_from_tree(oc_tree) == expected
-
-    @staticmethod
-    def test_division_binop_not_implemented():
-        code = """
-def func():
-    a = 12 / 2
-    return a
-        """
-        with pytest.raises(NotImplementedError):
-            parsed = parse(code)
-            make_opcount_tree(parsed)
 
     @staticmethod
     def test_augmented_assignment():
@@ -37,23 +26,13 @@ def func():
     a += 2
     a -= 34
     a *= 5
+    a /= 4
     return a
     """
-        expected = OpCount(add=2, mul=1)
+        expected = OpCount(add=2, mul=1, div=1)
         parsed = parse(code)
         oc_tree = make_opcount_tree(parsed)
         assert expected == count_from_tree(oc_tree)
-
-    def test_division_assignment_is_not_implemented(self):
-        code = """
-def func():
-    a = 0
-    a /= 2
-    return a
-        """
-        with pytest.raises(NotImplementedError):
-            parsed = parse(code)
-            make_opcount_tree(parsed)
 
 
 def test_simple_ifelse():

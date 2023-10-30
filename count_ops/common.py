@@ -1,6 +1,6 @@
 import logging
-from dataclasses import dataclass
-from typing import Self
+from dataclasses import dataclass, field
+from typing import Self, Dict
 
 logger = logging.getLogger("count_ops")
 
@@ -9,16 +9,18 @@ logger = logging.getLogger("count_ops")
 class OpCount:
     mul: int = 0
     add: int = 0
+    div: int = 0
+    functions: Dict[str, int] = field(default_factory=dict)
 
     def __add__(self, other):
         if isinstance(other, OpCount):
-            return OpCount(self.mul + other.mul, self.add + other.add)
+            return OpCount(self.mul + other.mul, self.add + other.add, self.div + other.div)
         else:
             raise NotImplementedError
 
     def __mul__(self, rhs):
         if isinstance(rhs, int):
-            return OpCount(self.mul * rhs, self.add * rhs)
+            return OpCount(self.mul * rhs, self.add * rhs, self.div * rhs)
         else:
             raise NotImplementedError(rhs.__class__.__name__)
 
@@ -27,9 +29,12 @@ class OpCount:
 
     def __lt__(self, other):
         if isinstance(other, OpCount):
-            return (self.mul + self.add) < (other.mul + other.add)
+            return self._count_all() < other._count_all()
         else:
             raise NotImplementedError
+
+    def _count_all(self):
+        return self.mul + self.add + self.div + sum(self.functions.values())
 
 
 @dataclass
