@@ -63,11 +63,11 @@ def make_opcount_tree(node, context=None, level=0) -> OpCountNode:
     elif isinstance(node, ast.For):
         log_indented("For", level)
 
-        if node.iter.func.id == "range":
+        if node.iter.func.id in ("range", "prange"):
             loop_range = get_loop_range(node.iter.args, context=context)
 
             return OpCountNode(
-                name="For",
+                name=f"For range{loop_range}",
                 op_count=OpCount(),
                 children=[make_opcount_tree(child, context=context, level=level + 1) for child in node.body],
                 children_op_mult=range_to_count(loop_range),
