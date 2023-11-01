@@ -46,6 +46,7 @@ class OpCountNode:
     op_count: OpCount
     children_op_mult: int = 1
     is_branch: bool = False
+    metadata: dict = field(default_factory=dict)
 
 
 def count_from_tree(node: OpCountNode):

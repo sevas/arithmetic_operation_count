@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit
+from numba import njit, prange
 import math as m
 
 # from count_ops.numba_lang import count_ops
@@ -61,6 +61,38 @@ def sobel(image_in, image_out):
                     x_val += image_in[idx2] * k_x[kidx]
                     y_val += image_in[idx2] * k_y[kidx]
             image_out[idx] = m.sqrt(x_val * x_val + y_val * y_val)
+
+
+@njit
+def clip(image_in, image_out, width, height, lo, hi):
+    for i in prange(height):
+        for j in range(width):
+            val = image_in[i, j]
+            if val < lo:
+                image_out[i, j] = lo
+            elif val > hi:
+                image_out[i, j] = hi
+            else:
+                image_out[i, j] = val
+
+
+@njit
+def compute_bbox(xyz, count):
+    xmin = np.inf
+    ymin = np.inf
+    zmin = np.inf
+    xmax = -np.inf
+    ymax = -np.inf
+    zmax = -np.inf
+
+    for i in range(count):
+        xmin = min(xmin, xyz[i, 0])
+        ymin = min(ymin, xyz[i, 1])
+        zmin = min(zmin, xyz[i, 2])
+        xmax = max(xmax, xyz[i, 0])
+        ymax = max(ymax, xyz[i, 1])
+        zmax = max(zmax, xyz[i, 2])
+    return xmin, ymin, zmin, xmax, ymax, zmax
 
 
 def main():

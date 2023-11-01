@@ -86,6 +86,33 @@ def make_opcount_tree(node, context=None, level=0) -> OpCountNode:
             is_branch=True,
         )
 
+    elif isinstance(node, ast.Call):
+        log_indented("Call", level)
+
+        if hasattr(node.func, "id"):
+            # builtin function
+            func_name = node.func.id
+        else:
+            # function from imported module
+            func_name = node.func.attr
+
+        return OpCountNode(
+            name=f"Call",
+            op_count=OpCount(functions={func_name: 1}),
+            children=[
+                make_opcount_tree(child, context=context, level=level + 1) for child in ast.iter_child_nodes(node)
+            ],
+            metadata={"name": func_name},
+        )
+    elif isinstance(node, ast.Name):
+        return OpCountNode(
+            name=f"Call",
+            op_count=OpCount(functions={node.id: 1}),
+            children=[
+                make_opcount_tree(child, context=context, level=level + 1) for child in ast.iter_child_nodes(node)
+            ],
+            metadata={"name": node.id},
+        )
     elif isinstance(node, ast.AugAssign):
         if isinstance(node.op, (ast.Add, ast.Sub)):
             oc = OpCount(add=1)
@@ -100,8 +127,17 @@ def make_opcount_tree(node, context=None, level=0) -> OpCountNode:
             name=f"AugAssign {node.op}",
             op_count=oc,
             children=[make_opcount_tree(node.value, context=context, level=level + 1)],
+            metadata={"target": node.target},
         )
-
+    elif isinstance(node, ast.Assign):
+        # assuming single target, no tuple unpacking
+        target_name = node.targets[0].id
+        return OpCountNode(
+            name=f"Assign {target_name}",
+            op_count=OpCount(),
+            children=[make_opcount_tree(node.value, context=context, level=level + 1)],
+            metadata={"target": target_name},
+        )
     else:
         log_indented(node.__class__.__name__, level)
 

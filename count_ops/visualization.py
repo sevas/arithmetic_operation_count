@@ -7,7 +7,14 @@ from count_ops.parse import parse
 from count_ops.lang_py import make_opcount_tree, get_func_named
 
 SRC_FILE = Path(__file__).parent.parent / "main_numba.py"
-FUNC_NAME = "sobel"
+FUNC_NAME = "compute_bbox"
+
+
+PARAMS = {
+    "width": 640,
+    "height": 480,
+    "count": 100,
+}
 
 
 class ColorPalette:
@@ -20,6 +27,7 @@ class ColorPalette:
     aqua = "#689d6a"
     white = "#eeeeee"
     grey = "#303030"
+    lightgrey = "#cccccc"
 
 
 def add_tree_to_scene(op_tree, gv: pg.GraphicsView):
@@ -27,9 +35,11 @@ def add_tree_to_scene(op_tree, gv: pg.GraphicsView):
 
     def add_node_to_scene(node: OpCountNode, pos):
         color_fill = pg.mkColor(ColorPalette.grey)
-        color_border = pg.mkColor(ColorPalette.white)
+        color_border = pg.mkColor(ColorPalette.lightgrey)
+        text_color = pg.mkColor(ColorPalette.lightgrey)
         tooltip = f"""<b>Node: </b>{node.name}"""
         box_width = 50
+        label = f"{node.name}"
 
         if node.is_branch:
             color_fill = pg.mkColor(ColorPalette.blue)
@@ -42,15 +52,21 @@ def add_tree_to_scene(op_tree, gv: pg.GraphicsView):
             box_width += 10
             color_fill = pg.mkColor(ColorPalette.yellow)
             tooltip = f"""<b>Node: </b>{node.name}<br><b>#muls: </b>: {node.op_count.mul}<br><b>#adds:</b>{node.op_count.add}"""
-
-        label = f"{node.name}"[:10]
-        # box_width = 20 * len(msg)
+        elif node.name.startswith("Call"):
+            label = node.metadata["name"]
+            color_fill = pg.mkColor(ColorPalette.purple)
+        elif node.name.startswith("Name"):
+            label = node.metadata["name"]
+            # box_width += 10
+            # tooltip = f"""<b>Node: </b>{node.name}<br><b>Op multiplier:</b> {node.children_op_mult}"""
+        box_width = max(10 * len(label), 50)
         node_item = QtWidgets.QGraphicsRectItem(pos[0], pos[1], box_width, 50)
         node_item.setToolTip(tooltip)
         node_item.setBrush(QtGui.QBrush(color_fill))
         node_item.setPen(QtGui.QPen(color_border, 1))
         node_item.z = 10
         txt = QtWidgets.QGraphicsTextItem(label)
+        txt.setDefaultTextColor(text_color)
         txt.setPos(pos[0] + 10, pos[1] + 5)
         txt.z = 10
 
@@ -89,7 +105,7 @@ def add_tree_to_scene(op_tree, gv: pg.GraphicsView):
 def main():
     parsed = parse(SRC_FILE.read_text())
     f = get_func_named(parsed, FUNC_NAME)
-    op_tree = make_opcount_tree(f)
+    op_tree = make_opcount_tree(f, context=PARAMS)
 
     pg.setConfigOption("foreground", "w")
     pg.setConfigOption("background", pg.mkColor(ColorPalette.black))
