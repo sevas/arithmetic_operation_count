@@ -97,7 +97,7 @@ def make_opcount_tree(node, context=None, level=0) -> OpCountNode:
             func_name = node.func.attr
 
         return OpCountNode(
-            name=f"Call",
+            name="Call",
             op_count=OpCount(functions={func_name: 1}),
             children=[
                 make_opcount_tree(child, context=context, level=level + 1) for child in ast.iter_child_nodes(node)
@@ -106,7 +106,7 @@ def make_opcount_tree(node, context=None, level=0) -> OpCountNode:
         )
     elif isinstance(node, ast.Name):
         return OpCountNode(
-            name=f"Call",
+            name="Name",
             op_count=OpCount(functions={node.id: 1}),
             children=[
                 make_opcount_tree(child, context=context, level=level + 1) for child in ast.iter_child_nodes(node)
@@ -124,19 +124,33 @@ def make_opcount_tree(node, context=None, level=0) -> OpCountNode:
             raise NotImplementedError(node)
 
         return OpCountNode(
-            name=f"AugAssign {node.op}",
+            name=f"AugAssign {node.op.__class__.__name__}",
             op_count=oc,
             children=[make_opcount_tree(node.value, context=context, level=level + 1)],
             metadata={"target": node.target},
         )
     elif isinstance(node, ast.Assign):
         # assuming single target, no tuple unpacking
-        target_name = node.targets[0].id
+        if isinstance(node.targets[0], ast.Name):
+            target_name = node.targets[0].id
+        elif isinstance(node.targets[0], ast.Subscript):
+            target_name = node.targets[0].value.id
+        else:
+            raise NotImplementedError(node.targets[0])
         return OpCountNode(
             name=f"Assign {target_name}",
             op_count=OpCount(),
             children=[make_opcount_tree(node.value, context=context, level=level + 1)],
             metadata={"target": target_name},
+        )
+    elif isinstance(node, ast.Constant):
+        return OpCountNode(
+            name=node.__class__.__name__,
+            op_count=OpCount(),
+            children=[
+                make_opcount_tree(child, context=context, level=level + 1) for child in ast.iter_child_nodes(node)
+            ],
+            metadata={"value": node.value},
         )
     else:
         log_indented(node.__class__.__name__, level)

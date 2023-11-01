@@ -1,13 +1,13 @@
 from pathlib import Path
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtGui, QtWidgets
 
 from count_ops.common import OpCountNode
 from count_ops.parse import parse
 from count_ops.lang_py import make_opcount_tree, get_func_named
 
 SRC_FILE = Path(__file__).parent.parent / "main_numba.py"
-FUNC_NAME = "compute_bbox"
+FUNC_NAME = "sobel"
 
 
 PARAMS = {
@@ -57,6 +57,12 @@ def add_tree_to_scene(op_tree, gv: pg.GraphicsView):
             color_fill = pg.mkColor(ColorPalette.purple)
         elif node.name.startswith("Name"):
             label = node.metadata["name"]
+            color_fill = pg.mkColor(ColorPalette.aqua)
+
+        elif node.name.startswith("Constant"):
+            label = str(node.metadata["value"])
+            color_fill = pg.mkColor(ColorPalette.aqua)
+
             # box_width += 10
             # tooltip = f"""<b>Node: </b>{node.name}<br><b>Op multiplier:</b> {node.children_op_mult}"""
         box_width = max(10 * len(label), 50)

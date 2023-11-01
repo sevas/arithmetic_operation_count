@@ -23,7 +23,7 @@ def print_tree(node: ast.AST, level=0):
 
 def main():
     logger = logging.getLogger("count_ops")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     parsed = parse(SRC_FILE.read_text())
     print(list(func_names(parsed)))
